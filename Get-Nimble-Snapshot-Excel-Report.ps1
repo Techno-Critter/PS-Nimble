@@ -5,14 +5,15 @@ What this crap does:
 Get Nimble Snapshot report from specified Nimble Group list
 ### Must have ImportExcel module installed!!!
 ### https://github.com/dfinke/ImportExcel
-###  Must have HPENimblePowerShellToolkit module installed!  ###
+###  Must have HPENimblePowerShellToolkit module installed!!!
 ###  Nimble uses port 5392 for API calls  ###
 #>
 
 #Requires -Module HPENimblePowerShellToolkit
 #Requires -Module ImportExcel
 
-# Function: Change data sizes to legible values; converts number to string
+## FUNCTIONS
+# Change data sizes to legible values; converts number to string
 Function Get-Size([double]$DataSize){
     Switch($DataSize){
         {$_ -lt 1KB}{
@@ -35,6 +36,49 @@ Function Get-Size([double]$DataSize){
         }
     }
     $DataValue
+}
+
+# Convert number of object items into Excel column headers
+Function Get-ColumnName ([int]$ColumnCount){
+    If(($ColumnCount -le 702) -and ($ColumnCount -ge 1)){
+        $ColumnCount = [Math]::Floor($ColumnCount)
+        $CharStart = 64
+        $FirstCharacter = $null
+
+        # Convert number into double letter column name (AA-ZZ)
+        If($ColumnCount -gt 26){
+            $FirstNumber = [Math]::Floor(($ColumnCount)/26)
+            $SecondNumber = ($ColumnCount) % 26
+
+            # Reset increment for base-26
+            If($SecondNumber -eq 0){
+                $FirstNumber--
+                $SecondNumber = 26
+            }
+
+            # Left-side column letter (first character from left to right)
+            $FirstLetter = [int]($FirstNumber + $CharStart)
+            $FirstCharacter = [char]$FirstLetter
+
+            # Right-side column letter (second character from left to right)
+            $SecondLetter = $SecondNumber + $CharStart
+            $SecondCharacter = [char]$SecondLetter
+
+            # Combine both letters into column name
+            $CharacterOutput = $FirstCharacter + $SecondCharacter
+        }
+
+        # Convert number into single letter column name (A-Z)
+        Else{
+            $CharacterOutput = [char]($ColumnCount + $CharStart)
+        }
+    }
+    Else{
+        $CharacterOutput = "ZZ"
+    }
+
+    # Output column name
+    $CharacterOutput
 }
 
 # Specify text file with each Nimble group name on separate line
@@ -81,7 +125,11 @@ If(Test-Path $NimbleDeviceFile){
                     @{Name="ReplEnabled";Expression={$_.replicate}},
                     @{Name="ReplStatus";Expression={$_.repl_status}},
                     @{Name="DataTransferred";Expression={Get-Size $_.repl_bytes_transferred}}
-            $SnapShots | Export-Excel -Path $Workbook -WorkSheetname $WSName.name -BoldTopRow -AutoSize -FreezeTopRow
+
+            $SnapShotsHeaderCount = Get-ColumnName ($SnapShots | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+            $SnapShotsHeaderRow = "`$A`$1:`$$SnapShotsHeaderCount`$1"
+            $SnapShotsStyle = New-ExcelStyle -Range "'Permissions'$SnapShotsHeaderRow" -HorizontalAlignment Center
+            $SnapShots | Export-Excel -Path $Workbook -WorkSheetname $WSName.name -BoldTopRow -AutoSize -FreezeTopRow -Style $SnapShotsStyle
 
             Disconnect-NSGroup
         }
@@ -89,11 +137,14 @@ If(Test-Path $NimbleDeviceFile){
             Write-Warning "Device $NimbleDevice is not responding."
             $ErrorArray += [PSCustomObject]@{
                 "Device" = $NimbleDevice
-                "Error" = "Device not responding"
+                "Error"  = "Device not responding"
             }
         }
     }
-    $ErrorArray | Export-Excel -Path $Workbook -WorksheetName "Errors" -BoldTopRow -AutoSize -FreezeTopRow
+    $ErrorArrayHeaderCount = Get-ColumnName ($ErrorArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $ErrorArrayHeaderRow = "`$A`$1:`$$ErrorArrayHeaderCount`$1"
+    $ErrorArrayStyle = New-ExcelStyle -Range "'Permissions'$ErrorArrayHeaderRow" -HorizontalAlignment Center
+    $ErrorArray | Export-Excel -Path $Workbook -WorksheetName "Errors" -BoldTopRow -AutoSize -FreezeTopRow -Style $ErrorArrayStyle
 
 }
 
