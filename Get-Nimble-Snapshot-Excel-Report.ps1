@@ -90,6 +90,14 @@ If(Test-Path $NimbleDeviceFile){
 # Create Excel output file
     $Date = Get-Date -Format yyyyMMMdd
     $Workbook = ("C:\Temp\Nimble\Nimble Reports\Nimble Replication Report $Date.xlsx")
+# Create Excel standard configuration properties
+    $ExcelProps = @{
+        Autosize = $true;
+        FreezeTopRow = $true;
+        BoldTopRow = $true;
+    }
+
+    $ExcelProps.Path = $Workbook
 
 # Set arrays
     $ErrorArray = @()
@@ -129,7 +137,7 @@ If(Test-Path $NimbleDeviceFile){
             $SnapShotsHeaderCount = Get-ColumnName ($SnapShots | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
             $SnapShotsHeaderRow = "`$A`$1:`$$SnapShotsHeaderCount`$1"
             $SnapShotsStyle = New-ExcelStyle -Range "'Permissions'$SnapShotsHeaderRow" -HorizontalAlignment Center
-            $SnapShots | Export-Excel -Path $Workbook -WorkSheetname $WSName.name -BoldTopRow -AutoSize -FreezeTopRow -Style $SnapShotsStyle
+            $SnapShots | Export-Excel @ExcelProps -WorkSheetname $WSName.name -Style $SnapShotsStyle
 
             Disconnect-NSGroup
         }
@@ -144,7 +152,7 @@ If(Test-Path $NimbleDeviceFile){
     $ErrorArrayHeaderCount = Get-ColumnName ($ErrorArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
     $ErrorArrayHeaderRow = "`$A`$1:`$$ErrorArrayHeaderCount`$1"
     $ErrorArrayStyle = New-ExcelStyle -Range "'Permissions'$ErrorArrayHeaderRow" -HorizontalAlignment Center
-    $ErrorArray | Export-Excel -Path $Workbook -WorksheetName "Errors" -BoldTopRow -AutoSize -FreezeTopRow -Style $ErrorArrayStyle
+    $ErrorArray | Export-Excel @ExcelProps -WorksheetName "Errors" -Style $ErrorArrayStyle
 
 }
 
