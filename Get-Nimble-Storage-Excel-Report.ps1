@@ -548,85 +548,92 @@ If(Test-Path $NimbleDeviceFile){
 #endregion
 
 #region Output to Excel file
-    ForEach($Workbook in $Workbooks){
-        # Group sheet
-        $GroupSheetHeaderCount = Get-ColumnName ($GroupSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $GroupSheetHeaderRow = "`$A`$1:`$$GroupSheetHeaderCount`$1"
-        $GroupSheetLastRow = ($GroupSheet | Measure-Object).Count + 1
-        If($GroupSheetLastRow -gt 1){
-            $GroupSheetNumberColumns = "Groups!`$U`$2:`$AA`$$GroupSheetLastRow"
-            $GroupSheetStyle = @()
-            $GroupSheetStyle += New-ExcelStyle -Range "Groups$GroupSheetHeaderRow" -HorizontalAlignment Center
-            $GroupSheetStyle += New-ExcelStyle -Range $GroupSheetNumberColumns -NumberFormat '0'
-            $GroupSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -Autosize -WorkSheetname "Groups" -Style $GroupSheetStyle
-        }
-        # Array sheet
-        $ArraySheetHeaderCount = Get-ColumnName ($ArraySheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $ArraySheetHeaderRow = "`$A`$1:`$$ArraySheetHeaderCount`$1"
-        $ArraySheetStyle = New-ExcelStyle -Range "Arrays$ArraySheetHeaderRow" -HorizontalAlignment Center
-        $ArraySheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -Autosize -WorkSheetname "Arrays" -Style $ArraySheetStyle
+    # Create Excel standard configuration properties
+    $ExcelProps = @{
+        Autosize = $true;
+        FreezeTopRow = $true;
+        BoldTopRow = $true;
+    }
 
-        # Pool sheet
-        $PoolSheetHeaderCount = Get-ColumnName ($PoolSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $PoolSheetHeaderRow = "`$A`$1:`$$PoolSheetHeaderCount`$1"
-        $PoolSheetStyle = New-ExcelStyle -Range "Pools$PoolSheetHeaderRow" -HorizontalAlignment Center
-        $PoolSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -Autosize -WorkSheetname "Pools" -Style $PoolSheetStyle
+    $ExcelProps.Path = $Workbook
 
-        # Volume sheet
-        $VolumeSheetHeaderCount = Get-ColumnName ($VolumeSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $VolumeSheetHeaderRow = "`$A`$1:`$$VolumeSheetHeaderCount`$1"
-        $VolumeSheetStyle = New-ExcelStyle -Range "Volumes$VolumeSheetHeaderRow" -HorizontalAlignment Center
-        $VolumeSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -Autosize -WorkSheetname "Volumes" -Style $VolumeSheetStyle
+    # Group sheet
+    $GroupSheetHeaderCount = Get-ColumnName ($GroupSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $GroupSheetHeaderRow = "`$A`$1:`$$GroupSheetHeaderCount`$1"
+    $GroupSheetLastRow = ($GroupSheet | Measure-Object).Count + 1
+    If($GroupSheetLastRow -gt 1){
+        $GroupSheetNumberColumns = "Groups!`$U`$2:`$AA`$$GroupSheetLastRow"
+        $GroupSheetStyle = @()
+        $GroupSheetStyle += New-ExcelStyle -Range "Groups$GroupSheetHeaderRow" -HorizontalAlignment Center
+        $GroupSheetStyle += New-ExcelStyle -Range $GroupSheetNumberColumns -NumberFormat '0'
+        $GroupSheet | Export-Excel @ExcelProps -WorkSheetname "Groups" -Style $GroupSheetStyle
+    }
+    # Array sheet
+    $ArraySheetHeaderCount = Get-ColumnName ($ArraySheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $ArraySheetHeaderRow = "`$A`$1:`$$ArraySheetHeaderCount`$1"
+    $ArraySheetStyle = New-ExcelStyle -Range "Arrays$ArraySheetHeaderRow" -HorizontalAlignment Center
+    $ArraySheet | Export-Excel @ExcelProps -WorkSheetname "Arrays" -Style $ArraySheetStyle
 
-        # Disk sheet
-        $DiskSheetHeaderCount = Get-ColumnName ($DiskSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $DiskSheetHeaderRow = "`$A`$1:`$$DiskSheetHeaderCount`$1"
-        $DiskSheetStyle = New-ExcelStyle -Range "Disks$DiskSheetHeaderRow" -HorizontalAlignment Center
-        $DiskSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -Autosize -WorkSheetname "Disks" -Style $DiskSheetStyle
+    # Pool sheet
+    $PoolSheetHeaderCount = Get-ColumnName ($PoolSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $PoolSheetHeaderRow = "`$A`$1:`$$PoolSheetHeaderCount`$1"
+    $PoolSheetStyle = New-ExcelStyle -Range "Pools$PoolSheetHeaderRow" -HorizontalAlignment Center
+    $PoolSheet | Export-Excel @ExcelProps -WorkSheetname "Pools" -Style $PoolSheetStyle
 
-        # Replication partner sheet
-        $RepPartnerSheetHeaderCount = Get-ColumnName ($RepPartnerSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $RepPartnerSheetHeaderRow = "`$A`$1:`$$RepPartnerSheetHeaderCount`$1"
-        $RepPartnerSheetStyle = New-ExcelStyle -Range "RepPartners$RepPartnerSheetHeaderRow" -HorizontalAlignment Center
-        $RepPartnerSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -AutoSize -WorkSheetname "RepPartners" -Style $RepPartnerSheetStyle
+    # Volume sheet
+    $VolumeSheetHeaderCount = Get-ColumnName ($VolumeSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $VolumeSheetHeaderRow = "`$A`$1:`$$VolumeSheetHeaderCount`$1"
+    $VolumeSheetStyle = New-ExcelStyle -Range "Volumes$VolumeSheetHeaderRow" -HorizontalAlignment Center
+    $VolumeSheet | Export-Excel @ExcelProps -WorkSheetname "Volumes" -Style $VolumeSheetStyle
 
-        # NIC config sheet
-        $NICConfigSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $NICConfigSheetHeaderRow = "`$A`$1:`$$NICConfigSheetHeaderCount`$1"
-        $NICConfigSheetStyle = New-ExcelStyle -Range "NIC Configs$NICConfigSheetHeaderRow" -HorizontalAlignment Center
-        $NICConfigSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -AutoSize -WorkSheetname "NIC Config" -Style $NICConfigSheetStyle
+    # Disk sheet
+    $DiskSheetHeaderCount = Get-ColumnName ($DiskSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $DiskSheetHeaderRow = "`$A`$1:`$$DiskSheetHeaderCount`$1"
+    $DiskSheetStyle = New-ExcelStyle -Range "Disks$DiskSheetHeaderRow" -HorizontalAlignment Center
+    $DiskSheet | Export-Excel @ExcelProps -WorkSheetname "Disks" -Style $DiskSheetStyle
 
-        # NIC interface sheet
-        $NICInterfaceSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $NICInterfaceSheetHeaderRow = "`$A`$1:`$$NICInterfaceSheetHeaderCount`$1"
-        $NICInterfaceSheetStyle = New-ExcelStyle -Range "NIC Interface$NICInterfaceSheetHeaderRow" -HorizontalAlignment Center
-        $NICInterfaceSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -AutoSize -WorkSheetname "NIC Interface" -Style $NICInterfaceSheetStyle
+    # Replication partner sheet
+    $RepPartnerSheetHeaderCount = Get-ColumnName ($RepPartnerSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $RepPartnerSheetHeaderRow = "`$A`$1:`$$RepPartnerSheetHeaderCount`$1"
+    $RepPartnerSheetStyle = New-ExcelStyle -Range "RepPartners$RepPartnerSheetHeaderRow" -HorizontalAlignment Center
+    $RepPartnerSheet | Export-Excel @ExcelProps -WorkSheetname "RepPartners" -Style $RepPartnerSheetStyle
 
-        # Networking sheet
-        $NetworkingSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $NetworkingSheetHeaderRow = "`$A`$1:`$$NetworkingSheetHeaderCount`$1"
-        $NetworkingSheetStyle = New-ExcelStyle -Range "Networking$NetworkingSheetHeaderRow" -HorizontalAlignment Center
-        $NetworkingSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -AutoSize -WorkSheetname "Networking" -Style $NetworkingSheetStyle
+    # NIC config sheet
+    $NICConfigSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $NICConfigSheetHeaderRow = "`$A`$1:`$$NICConfigSheetHeaderCount`$1"
+    $NICConfigSheetStyle = New-ExcelStyle -Range "NIC Configs$NICConfigSheetHeaderRow" -HorizontalAlignment Center
+    $NICConfigSheet | Export-Excel @ExcelProps -WorkSheetname "NIC Config" -Style $NICConfigSheetStyle
 
-        # Initiator sheet
-        $InitiatorSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $InitiatorSheetHeaderRow = "`$A`$1:`$$InitiatorSheetHeaderCount`$1"
-        $InitiatorInfoSheetStyle = New-ExcelStyle -Range "Initiator$InitiatorSheetHeaderRow" -HorizontalAlignment Center
-        $InitiatorInfoSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -AutoSize -WorkSheetname "Initiator" -Style $InitiatorInfoSheetStyle
+    # NIC interface sheet
+    $NICInterfaceSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $NICInterfaceSheetHeaderRow = "`$A`$1:`$$NICInterfaceSheetHeaderCount`$1"
+    $NICInterfaceSheetStyle = New-ExcelStyle -Range "NIC Interface$NICInterfaceSheetHeaderRow" -HorizontalAlignment Center
+    $NICInterfaceSheet | Export-Excel @ExcelProps -WorkSheetname "NIC Interface" -Style $NICInterfaceSheetStyle
 
-        # Initiator group sheet
-        $InitGroupSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-        $InitGroupSheetHeaderRow = "`$A`$1:`$$InitGroupSheetHeaderCount`$1"
-        $InitGroupSheetStyle = New-ExcelStyle -Range "InitGroup$InitGroupSheetHeaderRow" -HorizontalAlignment Center
-        $InitGroupSheet | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -AutoSize -WorkSheetname "InitGroup" -Style $InitGroupSheetStyle
+    # Networking sheet
+    $NetworkingSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $NetworkingSheetHeaderRow = "`$A`$1:`$$NetworkingSheetHeaderCount`$1"
+    $NetworkingSheetStyle = New-ExcelStyle -Range "Networking$NetworkingSheetHeaderRow" -HorizontalAlignment Center
+    $NetworkingSheet | Export-Excel @ExcelProps -WorkSheetname "Networking" -Style $NetworkingSheetStyle
 
-        # Error sheet
-        If($ErrorArray -ne ""){
-            $ErrorArrayHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-            $ErrorArrayHeaderRow = "`$A`$1:`$$ErrorArrayHeaderCount`$1"
-            $ErrorArrayStyle = New-ExcelStyle -Range "Errors$ErrorArrayHeaderRow" -HorizontalAlignment Center
-            $ErrorArray | Export-Excel -Path $Workbook -FreezeTopRow -BoldTopRow -AutoSize -WorkSheetname "Errors" -Style $ErrorArrayStyle
-        }
+    # Initiator sheet
+    $InitiatorSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $InitiatorSheetHeaderRow = "`$A`$1:`$$InitiatorSheetHeaderCount`$1"
+    $InitiatorInfoSheetStyle = New-ExcelStyle -Range "Initiator$InitiatorSheetHeaderRow" -HorizontalAlignment Center
+    $InitiatorInfoSheet | Export-Excel @ExcelProps -WorkSheetname "Initiator" -Style $InitiatorInfoSheetStyle
+
+    # Initiator group sheet
+    $InitGroupSheetHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $InitGroupSheetHeaderRow = "`$A`$1:`$$InitGroupSheetHeaderCount`$1"
+    $InitGroupSheetStyle = New-ExcelStyle -Range "InitGroup$InitGroupSheetHeaderRow" -HorizontalAlignment Center
+    $InitGroupSheet | Export-Excel @ExcelProps -WorkSheetname "InitGroup" -Style $InitGroupSheetStyle
+
+    # Error sheet
+    If($ErrorArray -ne ""){
+        $ErrorArrayHeaderCount = Get-ColumnName ($NICConfigSheet | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $ErrorArrayHeaderRow = "`$A`$1:`$$ErrorArrayHeaderCount`$1"
+        $ErrorArrayStyle = New-ExcelStyle -Range "Errors$ErrorArrayHeaderRow" -HorizontalAlignment Center
+        $ErrorArray | Export-Excel @ExcelProps -WorkSheetname "Errors" -Style $ErrorArrayStyle
     }
 }
 #endregion
