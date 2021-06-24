@@ -90,6 +90,7 @@ If(Test-Path $NimbleDeviceFile){
 # Create Excel output file
     $Date = Get-Date -Format yyyyMMMdd
     $Workbook = ("C:\Temp\Nimble\Nimble Reports\Nimble Replication Report $Date.xlsx")
+
 # Create Excel standard configuration properties
     $ExcelProps = @{
         Autosize = $true;
@@ -103,7 +104,21 @@ If(Test-Path $NimbleDeviceFile){
     $ErrorArray = @()
 
 # Set username and password to access each group; NOTE: account must have permissions to each group!
-    $Credentials = Get-Credential -UserName "admin" -Message "Nimble Controller Credentials:"
+    $NimbleAccount = "admin"
+    $Hostname = $ENV:COMPUTERNAME
+    $CurrentUser = $ENV:USERNAME
+    $CredentialFileDirectory = "C:\Credential Files"
+    $CredentialFile = "$CredentialFileDirectory\$Hostname\NimbleCreds $CurrentUser.xml"
+    If(Test-Path $CredentialFile){
+        $Credentials = Import-Clixml $CredentialFile
+    }
+    Else{
+        $Credentials = Get-Credential -UserName $NimbleAccount -Message "Provide the password for the Nimble account: $NimbleAccount"
+        If(-Not (Test-Path "$CredentialFileDirectory\$Hostname")){
+            New-Item -Path $CredentialFileDirectory -Name $Hostname -ItemType Directory
+        }
+        $Credentials | Export-Clixml $CredentialFile
+    }
 
     $NimbleDeviceList = Get-Content $NimbleDeviceFile
 
