@@ -3,4 +3,5 @@
 <ul>
   <li>Storage array reports
   <li>Storage snapshot reports
+  <li>Update firmware
 </ul>
